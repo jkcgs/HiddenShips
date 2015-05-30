@@ -210,10 +210,21 @@ public class Board {
         return checked[x][y];
     }
 
+    /**
+     * Set a box as is checked. If a ship part was there, the ShipPoint is marked as sunken.
+     * @param x The X coordinate to check
+     * @param y The Y coordinate to check
+     */
     public void setChecked(int x, int y) {
         setChecked(x, y, true);
     }
 
+    /**
+     * Sets a box as checked. If a ship part was there, the ShipPoint is marked as sunken.
+     * @param x The X coordinate to check
+     * @param y The Y coordinate to check
+     * @param checked Set if checked or not
+     */
     public void setChecked(int x, int y, boolean checked) {
         if(x >= cols || y >= rows) {
             System.err.println(String.format("setChecked: Trying invalid coordinate (%s, %s)", x, y));
@@ -226,6 +237,11 @@ public class Board {
         }
     }
 
+    /**
+     * Handles mouse moving activity (mouse hovering, focusing on boxes on board)
+     * @param mouseX The X mouse position moved to
+     * @param mouseY The Y mouse position moved to
+     */
     public void handleMouseMove(int mouseX, int mouseY) {
         // De-set active coordinate if mouse is out of the blocks area
         if(mouseX < xPos || mouseX > xPos + cols*blockSize
@@ -242,6 +258,12 @@ public class Board {
         if(mbY < rows) activeY = mbY;
     }
 
+    /**
+     * Handles the mouse click activity (checking boxes on board)
+     * @param button The button clicked
+     * @param mouseX The X mouse position while clicking
+     * @param mouseY The Y mouse position while clicking
+     */
     public void handleMouseClick(int button, int mouseX, int mouseY) {
         // Wrong button
         if(button != 0) {
@@ -266,6 +288,9 @@ public class Board {
         }
     }
 
+    /**
+     * Resets all stats, points, ships, etc, in the board.
+     */
     public void reset() {
         // Reset count
         found = 0;

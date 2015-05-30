@@ -71,6 +71,7 @@ public class HiddenShips extends BasicGame {
     }
 
     public void keyPressed(int key, char c) {
+        // Resets everything if the R key is pressed
         if(c == 'r') {
             reset();
         }

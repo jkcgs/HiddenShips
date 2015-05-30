@@ -61,6 +61,12 @@ public class Ship {
         this.isHorizontal = isHorizontal;
     }
 
+    /**
+     * Returns a ship point by a coordinate.
+     * @param x The X position of the point
+     * @param y The Y position of the point
+     * @return The ShipPoint from the ship. If the point does not belong to the ship, null is returned.
+     */
     public ShipPoint getPosition(int x, int y) {
         if(!isIn(x, y)) {
             return null;
@@ -75,6 +81,10 @@ public class Ship {
         return null;
     }
 
+    /**
+     * Check if the ship is totally sunken, by checking all ship points.
+     * @return A boolean, depending on the ship status.
+     */
     public boolean isTotallySunken() {
         for(ShipPoint pos : positions) {
             if(!pos.isSunken()) {

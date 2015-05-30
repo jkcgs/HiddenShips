@@ -18,8 +18,8 @@ public class MessageLog {
 
     /**
      * Creates the message log object. The position taken is from the bottom left position to show the log
-     * @param x
-     * @param y
+     * @param x The X position where the log is drawn
+     * @param y The lower Y position where the log is drawn
      */
     public MessageLog(int x, int y, int maxLog) {
         this.x = x;
@@ -28,6 +28,11 @@ public class MessageLog {
         messages = new ArrayList<String>();
     }
 
+    /**
+     * Draws the message log from last to first. Also draws it from down to up. Lower position is
+     * defined by X and Y positions from the object.
+     * @param g The Graphics object where to draw the log.
+     */
     public void draw(Graphics g) {
         g.setColor(Color.white);
         int c = 0;
@@ -38,6 +43,10 @@ public class MessageLog {
         }
     }
 
+    /**
+     * Adds a message to the log. If the log is full, the first message is deleted.
+     * @param msg The message to add.
+     */
     public void addMessage(String msg) {
         messages.add(msg);
         if(messages.size() > maxLog) {
