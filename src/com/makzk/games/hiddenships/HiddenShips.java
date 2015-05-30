@@ -7,6 +7,11 @@ import org.newdawn.slick.*;
  * Created by makzk on 27-05-15.
  */
 public class HiddenShips extends BasicGame {
+    // Window properties
+    public static String winTitle = "HiddenShips";
+    public static int winWidth = 1050;
+    public static int winHeight = 600;
+
     // Position where the squares begin
     private int initialX = 20;
     private int initialY = 20;
@@ -16,35 +21,26 @@ public class HiddenShips extends BasicGame {
     private int rows = 11;
     private int size = 50;
 
-    // Active square coordinates, the square that has the focus
-    private int activeX = 0;
-    private int activeY = 0;
-
     // Minimum size of each ship
-    private int minLength = 3;
+    private int minLength = 2;
     private int maxLength = 5;
 
-    // Number of ships to place
-    private int nSelected = 5;
+    // Number of ships to place in
+    private int nShips = 6;
 
     // Total amount of ship parts placed
     private int totalSelected = 0;
 
-    // Ship parts found
-    private int found = 0;
+    // Board
+    private Board board;
 
-    // check
-    private boolean[][] checked;
-    private boolean[][] data;
-
-    public HiddenShips() {
-        super("Hola");
+    public HiddenShips(String title) {
+        super(title);
     }
 
     @Override
     public void init(GameContainer container) throws SlickException {
-        checked = new boolean[rows][cols];
-        data = new boolean[rows][cols];
+        board = new Board(cols, rows, size, initialX, initialY);
         reset();
     }
 
@@ -55,89 +51,23 @@ public class HiddenShips extends BasicGame {
 
     @Override
     public void render(GameContainer c, Graphics g) throws SlickException {
-        // Grid drawing!
+        board.draw(g);
+
+        // Information
+        int xpos = initialX + cols * size + cols + 10;
         g.setColor(Color.white);
-
-        // Draw main rectangle, based on margin
-        int sqWidth = size * cols;
-        int sqHeight = size * rows;
-        g.drawRect(initialX, initialY, sqWidth, sqHeight);
-
-        // Draw vertical lines
-        float colWidth = sqWidth / cols;
-        for(int i = 1; i < cols; i++) {
-            float x = initialX + colWidth*i;
-            g.drawLine(x, initialY, x, initialY + sqHeight);
-        }
-
-        // Draw horizontal lines
-        float rowHeight = sqHeight / rows;
-        for(int i = 1; i < rows; i++) {
-            float y = initialY + rowHeight*i;
-            g.drawLine(initialX, y, initialY + sqWidth, y);
-        }
-
-        for(int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                int x = initialX + size * j + 1;
-                int y = initialY + size * i + 1;
-
-                if(checked[i][j] && data[i][j]) {
-                    g.setColor(Color.red);
-                } else {
-                    g.setColor(checked[i][j] ? Color.lightGray : Color.darkGray);
-                }
-                g.fillRect(x, y, size-1, size-1);
-            }
-        }
-
-        // Draw selected square
-        g.setColor(new Color(200, 200, 200, 100));
-        if(activeX >= 0 && activeY >= 0) {
-            float x = activeX * colWidth + initialX + 1;
-            float y = activeY * rowHeight + initialY + 1;
-            g.fillRect(x, y, colWidth - 1, rowHeight - 1);
-        }
-
-        g.setColor(Color.white);
-        g.drawString(String.format("Active: (%s, %s)", activeX, activeY), 10, 30);
-        g.drawString(String.format("Found: %s/%s", found, totalSelected), 10, 50);
+        g.drawString(String.format("Active: (%s, %s)", board.activeX, board.activeY), xpos, 30);
+        g.drawString(String.format("Found: %s/%s", board.found, totalSelected), xpos, 50);
+        g.drawString(String.format("Sunken: %s/%s", board.sunken, nShips), xpos, 70);
+        g.drawString("Legend\nDark grey: not checked\nLight grey: nothing\nRed: sunken ship part", xpos, 110);
     }
 
     public void mouseMoved(int oldx, int oldy, int mouseX, int mouseY) {
-        // De-set active coordinate if mouse is out of the blocks area
-        if(mouseX < initialX || mouseX > initialX + cols*size
-                || mouseY < initialY || mouseY > initialY + rows*size ) {
-            activeX = -1;
-            activeY = -1;
-            return;
-        }
-
-        int mbX = (mouseX - initialX) / size;
-        int mbY = (mouseY - initialY) / size;
-
-        if(mbX < cols) activeX = mbX;
-        if(mbY < rows) activeY = mbY;
+        board.handleMouseMove(mouseX, mouseY);
     }
 
     public void mousePressed(int button, int x, int y) {
-        // Wrong button
-        if(button != 0) {
-            return;
-        }
-
-        // Wrong active coordinate
-        if(activeX < 0 || activeY < 0) {
-            return;
-        }
-
-
-        if(!checked[activeY][activeX]) {
-            checked[activeY][activeX] = true;
-            if(data[activeY][activeX]) {
-                found++;
-            }
-        }
+        board.handleMouseClick(button, x, y);
     }
 
     public void keyPressed(int key, char c) {
@@ -147,82 +77,32 @@ public class HiddenShips extends BasicGame {
     }
 
     public void reset() {
-        // Set a 'null' active block
-        activeX = -1;
-        activeY = -1;
-
-        // Reset count
-        found = 0;
-        totalSelected = 0;
-
-        // Reset arrays
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                checked[i][j] = false;
-                data[i][j] = false;
-            }
-        }
+        board.reset();
 
         // Set special blocks
         int c = 0;
-        while(c < nSelected) {
+        while(c < nShips) {
             int size = minLength + (int)(Math.random() * (maxLength - minLength));
-            boolean direction = Math.random() >= .5;
+            boolean direction = Math.random() >= .5; // true: horizontal, false: vertical
 
-            // true: horizontal, false: vertical
-            if(direction) { // horizontal
-                // Initial positions for ship
-                int ix = (int)(Math.random() * (cols - size)); // initial x
-                int iy = (int)(Math.random() * rows); // initial y
+            // Initial positions for ship
+            int ix = (int)(Math.random() * (direction ? cols - size : cols)); // initial x
+            int iy = (int)(Math.random() * (direction ? rows : rows - size)); // initial y
 
-                // Check for collisions
-                for (int i = ix; i < ix + size; i++) {
-                    if(data[iy][i]) {
-                        break;
-                    }
-
-                    // No collisions
-                    if(i == (ix + size - 1)) {
-                        // Place ship
-                        for (int j = ix; j < ix + size; j++) {
-                            data[iy][j] = true;
-                            totalSelected++;
-                        }
-
-                        // Placed ships counter
-                        c++;
-                    }
-                }
-            } else { // Vertical
-                // Initial positions for ship
-                int ix = (int)(Math.random() * cols); // initial x
-                int iy = (int)(Math.random() * (rows - size)); // initial y
-
-                // Check for collisions
-                for (int i = iy; i < iy + size; i++) {
-                    if(data[i][ix]) {
-                        break;
-                    }
-
-                    // No collisions
-                    if(i == (iy + size - 1)) {
-                        // Place ship
-                        for (int j = iy; j < iy + size; j++) {
-                            data[j][ix] = true;
-                            totalSelected++;
-                        }
-
-                        // Placed ships counter
-                        c++;
-                    }
-                }
+            Ship ship = Ship.createShip(ix, iy, direction, size);
+            if(board.canBePlaced(ship)) {
+                board.place(ship);
+                c++;
             }
         }
+
+        totalSelected = board.totalParts();
     }
 
     public static void main(String[] args) throws SlickException {
-        AppGameContainer app = new AppGameContainer(new HiddenShips());
-        app.setDisplayMode(800, 600, false);
+        AppGameContainer app = new AppGameContainer(new HiddenShips(winTitle));
+        app.setDisplayMode(winWidth, winHeight, false);
+        app.setShowFPS(false);
         app.start();
     }
 }
