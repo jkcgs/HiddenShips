@@ -95,6 +95,15 @@ public class Board {
             g.fillRect(x, y, colWidth - 1, rowHeight - 1);
         }
 
+        // Draw coordinates numbers
+        g.setColor(Color.white);
+        for (int i = 0; i < cols; i++) {
+            g.drawString((i+1)+"", xPos + i*blockSize + 10, yPos - 20);
+        }
+        for (int i = 0; i < rows; i++) {
+            g.drawString((i+1)+"", xPos - 20, yPos + i*blockSize + 10);
+        }
+
         mlog.draw(g);
     }
 
@@ -248,7 +257,7 @@ public class Board {
             setChecked(activeX, activeY);
             if(containsShip(activeX, activeY)) {
                 found++;
-                mlog.addMessage(String.format("found at %s, %s", activeX, activeY));
+                mlog.addMessage(String.format("found at %s, %s", activeX+1, activeY+1));
                 if(getAt(activeX, activeY).isTotallySunken()) {
                     sunken++;
                     mlog.addMessage("ship sunken!");

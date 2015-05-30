@@ -40,7 +40,7 @@ public class HiddenShips extends BasicGame {
 
     @Override
     public void init(GameContainer container) throws SlickException {
-        board = new Board(cols, rows, size, initialX, initialY);
+        board = new Board(cols, rows, size, initialX+5, initialY+5);
         reset();
     }
 
@@ -56,7 +56,7 @@ public class HiddenShips extends BasicGame {
         // Information
         int xpos = initialX + cols * size + cols + 10;
         g.setColor(Color.white);
-        g.drawString(String.format("Active: (%s, %s)", board.activeX, board.activeY), xpos, 30);
+        g.drawString(String.format("Active: (%s, %s)", board.activeX+1, board.activeY+1), xpos, 30);
         g.drawString(String.format("Found: %s/%s", board.found, totalSelected), xpos, 50);
         g.drawString(String.format("Sunken: %s/%s", board.sunken, nShips), xpos, 70);
         g.drawString("Legend\nDark grey: not checked\nLight grey: nothing\nRed: sunken ship part", xpos, 110);
