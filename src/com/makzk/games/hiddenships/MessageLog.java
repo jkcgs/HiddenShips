@@ -44,13 +44,38 @@ public class MessageLog {
     }
 
     /**
-     * Adds a message to the log. If the log is full, the first message is deleted.
-     * @param msg The message to add.
+     * Sets the max amount of messages to be logged and stored.
+     * @param maxLog The amount of messages
+     */
+    public void setMaxLog(int maxLog) {
+        this.maxLog = maxLog;
+    }
+
+    /**
+     * Adds a message to the log. The new message will be split on new line characters, and each line will be
+     * counted as different messages, then adding them in reverse order to show them as a multiline message.
+     * If the log exceeds its maximum amount of messages, the exceeding amount of
+     * message will be removed from the beginning of the messages list.
+     * @param msg The message(s) to add.
      */
     public void addMessage(String msg) {
-        messages.add(msg);
-        if(messages.size() > maxLog) {
-            messages.remove(0);
+        String msgs[] = msg.split("\n");
+        for (String m : msgs) {
+            messages.add(m);
         }
+
+        if(messages.size() > maxLog) {
+            int diff = maxLog - messages.size();
+            for (int i = 0; i < diff; i++) {
+                messages.remove(0);
+            }
+        }
+    }
+
+    /**
+     * Removes all messages from the log
+     */
+    public void clear() {
+        messages.clear();
     }
 }

@@ -19,17 +19,22 @@ public class Board {
     int activeX = -1;
     int activeY = -1;
 
+    // Set if boxes are checkable on mouse click
+    private boolean canCheck = true;
+
     // Ships parts found and totally sunken
     int found = 0;
     int sunken = 0;
     List<Ship> ships;
     Ship[][] board; // Points to ships
-    MessageLog mlog;
+    final MessageLog mlog;
 
     /**
-     * (Supossedly) synchronized places where the board is checked for a ship part existance
+     * (Supossedly) synchronized places where the board is checked
      */
     boolean[][] checked;
+
+    private Runnable clickEvent;
 
     public Board(int cols, int rows, int blockSize, int xPos, int yPos) {
         this.cols = cols;
@@ -38,9 +43,11 @@ public class Board {
         this.xPos = xPos;
         this.yPos = yPos;
         board = new Ship[cols][rows];
-        reset();
 
         mlog = new MessageLog(blockSize*cols+cols+20, blockSize*rows, 10);
+        clickEvent = null;
+
+        reset();
     }
 
     /**
@@ -238,6 +245,36 @@ public class Board {
     }
 
     /**
+     * Sets all the board positions as unchecked. Also sets a ship in place as not sunken.
+     */
+    public void uncheckAll() {
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                checked[cols][rows] = false;
+                if(containsShip(cols, rows)) {
+                    getAt(cols, rows).getPosition(cols, rows).setSunken(false);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the runnable event to trigger on clicking a valid box
+     * @param clickEvent The event to be trigged
+     */
+    public void setClickEvent(Runnable clickEvent) {
+        this.clickEvent = clickEvent;
+    }
+
+    /**
+     * Sets if board boxes can be checked
+     * @param canCheck A boolean value
+     */
+    public void setCanCheck(boolean canCheck) {
+        this.canCheck = canCheck;
+    }
+
+    /**
      * Handles mouse moving activity (mouse hovering, focusing on boxes on board)
      * @param mouseX The X mouse position moved to
      * @param mouseY The Y mouse position moved to
@@ -256,6 +293,7 @@ public class Board {
 
         if(mbX < cols) activeX = mbX;
         if(mbY < rows) activeY = mbY;
+
     }
 
     /**
@@ -275,7 +313,7 @@ public class Board {
             return;
         }
 
-        if(!isChecked(activeX, activeY)) {
+        if(canCheck && !isChecked(activeX, activeY)) {
             setChecked(activeX, activeY);
             if(containsShip(activeX, activeY)) {
                 found++;
@@ -285,6 +323,10 @@ public class Board {
                     mlog.addMessage("ship sunken!");
                 }
             }
+        }
+
+        if(clickEvent != null) {
+            clickEvent.run();
         }
     }
 
@@ -299,6 +341,9 @@ public class Board {
         // Reset active position
         activeX = -1;
         activeY = -1;
+
+        // Reset message log
+        mlog.clear();
 
         ships = new ArrayList<Ship>();
         board = new Ship[cols][rows];

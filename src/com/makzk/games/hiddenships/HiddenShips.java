@@ -14,16 +14,9 @@ public class HiddenShips extends BasicGameState {
     private int initialY = 20;
 
     // Number of cols and rows, and square size
-    private int cols = 15;
-    private int rows = 11;
-    private int size = 50;
-
-    // Minimum size of each ship
-    private int minLength = 2;
-    private int maxLength = 5;
-
-    // Number of ships to place in
-    private int nShips = 6;
+    private int cols;
+    private int rows;
+    private int size;
 
     // Total amount of ship parts placed
     private int totalSelected = 0;
@@ -36,6 +29,10 @@ public class HiddenShips extends BasicGameState {
 
     @Override
     public void init(GameContainer container, StateBasedGame game) throws SlickException {
+        cols = Main.boardCols;
+        rows = Main.boardRows;
+        size = Main.boxSize;
+
         board = new Board(cols, rows, size, initialX+5, initialY+5);
         reset();
     }
@@ -54,7 +51,7 @@ public class HiddenShips extends BasicGameState {
         g.setColor(Color.white);
         g.drawString(String.format("Active: (%s, %s)", board.activeX+1, board.activeY+1), xpos, 30);
         g.drawString(String.format("Found: %s/%s", board.found, totalSelected), xpos, 50);
-        g.drawString(String.format("Sunken: %s/%s", board.sunken, nShips), xpos, 70);
+        g.drawString(String.format("Sunken: %s/%s", board.sunken, Main.shipProps.length), xpos, 70);
         g.drawString("Legend\nDark grey: not checked\nLight grey: nothing\nRed: sunken ship part", xpos, 110);
     }
 
@@ -78,8 +75,8 @@ public class HiddenShips extends BasicGameState {
 
         // Set special blocks
         int c = 0;
-        while(c < nShips) {
-            int size = minLength + (int)(Math.random() * (maxLength - minLength));
+        while(c < Main.shipProps.length) {
+            int size = Main.shipProps[c];
             boolean direction = Math.random() >= .5; // true: horizontal, false: vertical
 
             // Initial positions for ship
