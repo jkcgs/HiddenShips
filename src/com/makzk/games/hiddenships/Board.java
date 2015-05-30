@@ -24,6 +24,7 @@ public class Board {
     int sunken = 0;
     List<Ship> ships;
     Ship[][] board; // Points to ships
+    MessageLog mlog;
 
     /**
      * (Supossedly) synchronized places where the board is checked for a ship part existance
@@ -38,6 +39,8 @@ public class Board {
         this.yPos = yPos;
         board = new Ship[cols][rows];
         reset();
+
+        mlog = new MessageLog(blockSize*cols+cols+20, blockSize*rows, 10);
     }
 
     /**
@@ -91,6 +94,8 @@ public class Board {
             float y = activeY * rowHeight + yPos + 1;
             g.fillRect(x, y, colWidth - 1, rowHeight - 1);
         }
+
+        mlog.draw(g);
     }
 
     /**
@@ -243,8 +248,10 @@ public class Board {
             setChecked(activeX, activeY);
             if(containsShip(activeX, activeY)) {
                 found++;
+                mlog.addMessage(String.format("found at %s, %s", activeX, activeY));
                 if(getAt(activeX, activeY).isTotallySunken()) {
                     sunken++;
+                    mlog.addMessage("ship sunken!");
                 }
             }
         }
