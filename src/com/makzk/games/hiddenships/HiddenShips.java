@@ -1,17 +1,14 @@
 package com.makzk.games.hiddenships;
 
 import org.newdawn.slick.*;
+import org.newdawn.slick.state.BasicGameState;
+import org.newdawn.slick.state.StateBasedGame;
 
 /**
  * Hidden ships (submarines) game simulation
  * Created by makzk on 27-05-15.
  */
-public class HiddenShips extends BasicGame {
-    // Window properties
-    public static String winTitle = "HiddenShips";
-    public static int winWidth = 1050;
-    public static int winHeight = 600;
-
+public class HiddenShips extends BasicGameState {
     // Position where the squares begin
     private int initialX = 20;
     private int initialY = 20;
@@ -34,23 +31,22 @@ public class HiddenShips extends BasicGame {
     // Board
     private Board board;
 
-    public HiddenShips(String title) {
-        super(title);
+    public HiddenShips() {
     }
 
     @Override
-    public void init(GameContainer container) throws SlickException {
+    public void init(GameContainer container, StateBasedGame game) throws SlickException {
         board = new Board(cols, rows, size, initialX+5, initialY+5);
         reset();
     }
 
     @Override
-    public void update(GameContainer c, int delta) throws SlickException {
+    public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
         // :D
     }
 
     @Override
-    public void render(GameContainer c, Graphics g) throws SlickException {
+    public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
         board.draw(g);
 
         // Information
@@ -100,10 +96,8 @@ public class HiddenShips extends BasicGame {
         totalSelected = board.totalParts();
     }
 
-    public static void main(String[] args) throws SlickException {
-        AppGameContainer app = new AppGameContainer(new HiddenShips(winTitle));
-        app.setDisplayMode(winWidth, winHeight, false);
-        app.setShowFPS(false);
-        app.start();
+    @Override
+    public int getID() {
+        return 0;
     }
 }
