@@ -3,28 +3,37 @@ package com.makzk.games.hiddenships;
 import org.newdawn.slick.*;
 
 /**
+ * Hidden ships (submarines) game simulation
  * Created by makzk on 27-05-15.
  */
 public class HiddenShips extends BasicGame {
-
-    /**
-     * Create a new basic game
-     *
-     * @param title The title for the game
-     */
-    // Position of the first square
+    // Position where the squares begin
     private int initialX = 20;
     private int initialY = 20;
 
+    // Number of cols and rows, and square size
     private int cols = 15;
     private int rows = 11;
     private int size = 50;
 
+    // Active square coordinates, the square that has the focus
     private int activeX = 0;
     private int activeY = 0;
 
-    private int nSelected = 20;
+    // Minimum size of each ship
+    private int minLength = 3;
+    private int maxLength = 5;
+
+    // Number of ships to place
+    private int nSelected = 5;
+
+    // Total amount of ship parts placed
+    private int totalSelected = 0;
+
+    // Ship parts found
     private int found = 0;
+
+    // check
     private boolean[][] checked;
     private boolean[][] data;
 
@@ -58,7 +67,7 @@ public class HiddenShips extends BasicGame {
         float colWidth = sqWidth / cols;
         for(int i = 1; i < cols; i++) {
             float x = initialX + colWidth*i;
-            g.drawLine(x, initialX, x, initialY + sqHeight);
+            g.drawLine(x, initialY, x, initialY + sqHeight);
         }
 
         // Draw horizontal lines
@@ -92,15 +101,18 @@ public class HiddenShips extends BasicGame {
 
         g.setColor(Color.white);
         g.drawString(String.format("Active: (%s, %s)", activeX, activeY), 10, 30);
-        g.drawString(String.format("Found: %s/%s", found, nSelected), 10, 50);
+        g.drawString(String.format("Found: %s/%s", found, totalSelected), 10, 50);
     }
 
     public void mouseMoved(int oldx, int oldy, int mouseX, int mouseY) {
+        // De-set active coordinate if mouse is out of the blocks area
         if(mouseX < initialX || mouseX > initialX + cols*size
-                || mouseY < initialY || mouseY > rows*size ) {
+                || mouseY < initialY || mouseY > initialY + rows*size ) {
             activeX = -1;
             activeY = -1;
+            return;
         }
+
         int mbX = (mouseX - initialX) / size;
         int mbY = (mouseY - initialY) / size;
 
@@ -119,9 +131,12 @@ public class HiddenShips extends BasicGame {
             return;
         }
 
-        checked[activeY][activeX] = true;
-        if(data[activeY][activeX]) {
-            found++;
+
+        if(!checked[activeY][activeX]) {
+            checked[activeY][activeX] = true;
+            if(data[activeY][activeX]) {
+                found++;
+            }
         }
     }
 
@@ -138,6 +153,7 @@ public class HiddenShips extends BasicGame {
 
         // Reset count
         found = 0;
+        totalSelected = 0;
 
         // Reset arrays
         for (int i = 0; i < rows; i++) {
@@ -150,12 +166,56 @@ public class HiddenShips extends BasicGame {
         // Set special blocks
         int c = 0;
         while(c < nSelected) {
-            int x = (int)(Math.random() * cols);
-            int y = (int)(Math.random() * rows);
+            int size = minLength + (int)(Math.random() * (maxLength - minLength));
+            boolean direction = Math.random() >= .5;
 
-            if(!data[y][x]) {
-                data[y][x] = true;
-                c++;
+            // true: horizontal, false: vertical
+            if(direction) { // horizontal
+                // Initial positions for ship
+                int ix = (int)(Math.random() * (cols - size)); // initial x
+                int iy = (int)(Math.random() * rows); // initial y
+
+                // Check for collisions
+                for (int i = ix; i < ix + size; i++) {
+                    if(data[iy][i]) {
+                        break;
+                    }
+
+                    // No collisions
+                    if(i == (ix + size - 1)) {
+                        // Place ship
+                        for (int j = ix; j < ix + size; j++) {
+                            data[iy][j] = true;
+                            totalSelected++;
+                        }
+
+                        // Placed ships counter
+                        c++;
+                    }
+                }
+            } else { // Vertical
+                // Initial positions for ship
+                int ix = (int)(Math.random() * cols); // initial x
+                int iy = (int)(Math.random() * (rows - size)); // initial y
+
+                // Check for collisions
+                for (int i = iy; i < iy + size; i++) {
+                    if(data[i][ix]) {
+                        break;
+                    }
+
+                    // No collisions
+                    if(i == (iy + size - 1)) {
+                        // Place ship
+                        for (int j = iy; j < iy + size; j++) {
+                            data[j][ix] = true;
+                            totalSelected++;
+                        }
+
+                        // Placed ships counter
+                        c++;
+                    }
+                }
             }
         }
     }
