@@ -25,6 +25,7 @@ public class PlayerBoard extends BasicGameState {
     @Override
     public void init(GameContainer container, StateBasedGame game) throws SlickException {
         board = new Board(Main.boardCols, Main.boardRows, Main.boxSize, 25, 25);
+        reset();
 
         board.mlog.setMaxLog(15);
         board.mlog.addMessage("Please locate your ships by\nleft-clicking with the mouse.");
@@ -99,9 +100,13 @@ public class PlayerBoard extends BasicGameState {
 
     public void reset() {
         board.reset();
-        shipsPlaced = new boolean[Main.shipProps.length];
         placingDirection = true;
         confirmedPositions = false;
+
+        shipsPlaced = new boolean[Main.shipProps.length];
+        for (int i = 0; i < shipsPlaced.length; i++) {
+            shipsPlaced[i] = false;
+        }
     }
 
     public int totalShipsPlayed() {
