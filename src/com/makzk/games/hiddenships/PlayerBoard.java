@@ -30,6 +30,7 @@ public class PlayerBoard extends BasicGameState {
         board.mlog.setMaxLog(15);
         board.mlog.addMessage("Please locate your ships by\nleft-clicking with the mouse.");
         board.mlog.addMessage("Change direction pressing\nthe D (key).");
+        board.mlog.addMessage("Remove a placed ship by\nright-clicking on it.");
         board.mlog.addMessage("Place the ship [1] size " + Main.shipProps[0]);
         board.setCanCheck(false);
     }
