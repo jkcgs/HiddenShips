@@ -20,7 +20,6 @@ public class Button {
     private int x = 0;
     private int y = 0;
     private boolean posCentered = false;
-    private boolean mustRunAction = false;
     private int verticalPadding = 5;
     private int horizontalPadding = 10;
     private int minWidth = 0;
@@ -32,11 +31,16 @@ public class Button {
     private Color hoverFgColor = Color.white;
     private Color activeBgColor = new Color(30, 30, 30);
     private Color activeFgColor = Color.white;
+    private Color disabledBgColor = Color.lightGray;
+    private Color disabledFgColor = Color.white;
 
     private String text;
 
     private Runnable action = null;
     private ButtonState state = ButtonState.BUTTON_STATE_NONE;
+    private boolean mustRunAction = false;
+    private boolean disabled = false;
+    private boolean shown = true;
 
     private int finalWidth = 0;
     private int finalHeight = 0;
@@ -54,7 +58,23 @@ public class Button {
         this.text = text;
     }
 
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    public void setShown(boolean shown) {
+        this.shown = shown;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
     public void draw(Graphics g) {
+        if(!shown) {
+            return;
+        }
+
         if(font == null) {
             font = g.getFont();
         }
@@ -66,18 +86,39 @@ public class Button {
         x = posCentered ? x - finalWidth/2 : x;
         y = posCentered ? y - finalHeight/2 : y;
 
-        switch (state) {
-            case BUTTON_STATE_ACTIVE: g.setColor(activeBgColor); break;
-            case BUTTON_STATE_HOVER: g.setColor(hoverBgColor); break;
-            case BUTTON_STATE_NONE: g.setColor(bgColor); break;
+        if(disabled) {
+            g.setColor(disabledBgColor);
+        } else {
+            switch (state) {
+                case BUTTON_STATE_ACTIVE:
+                    g.setColor(activeBgColor);
+                    break;
+                case BUTTON_STATE_HOVER:
+                    g.setColor(hoverBgColor);
+                    break;
+                case BUTTON_STATE_NONE:
+                    g.setColor(bgColor);
+                    break;
+            }
         }
         g.fillRect(x, y, finalWidth, finalHeight);
 
-        switch (state) {
-            case BUTTON_STATE_ACTIVE: g.setColor(activeFgColor); break;
-            case BUTTON_STATE_HOVER: g.setColor(hoverFgColor); break;
-            case BUTTON_STATE_NONE: g.setColor(fgColor); break;
+        if(disabled) {
+            g.setColor(disabledFgColor);
+        } else {
+            switch (state) {
+                case BUTTON_STATE_ACTIVE:
+                    g.setColor(activeFgColor);
+                    break;
+                case BUTTON_STATE_HOVER:
+                    g.setColor(hoverFgColor);
+                    break;
+                case BUTTON_STATE_NONE:
+                    g.setColor(fgColor);
+                    break;
+            }
         }
+
         int fPadding = (finalWidth - font.getWidth(text)) / 2;
         Font prevFont = g.getFont();
         g.setFont(font);
@@ -86,6 +127,10 @@ public class Button {
     }
 
     public void handleUpdate(GameContainer gc) {
+        if(disabled || !shown) {
+            return;
+        }
+
         int my = gc.getHeight() - Mouse.getY();
         int mx = Mouse.getX();
 
