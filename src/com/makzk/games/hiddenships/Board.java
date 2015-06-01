@@ -183,7 +183,7 @@ public class Board {
      * @return A boolean depending on the space usage
      */
     public boolean containsShip(int x, int y) {
-        if(x >= cols || y >= rows) {
+        if(x >= cols || y >= rows || x < 0 || y < 0) {
             System.err.println(String.format("containsShip: Trying invalid coordinate (%s, %s)", x, y));
             return false;
         }

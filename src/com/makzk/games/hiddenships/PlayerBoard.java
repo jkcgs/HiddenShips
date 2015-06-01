@@ -23,6 +23,8 @@ public class PlayerBoard extends BasicGameState {
     private final int turnPostDelay = 3000;
     private int delayAccum = 0;
 
+    private Button test;
+
     @Override
     public int getID() {
         return 1;
@@ -39,6 +41,13 @@ public class PlayerBoard extends BasicGameState {
         board.mlog.addMessage("Remove a placed ship by\nright-clicking on it.");
         board.mlog.addMessage("Place the ship [1] size " + HiddenShips.shipProps[0]);
         board.setCanCheck(false);
+
+        test = new Button(800, 100, "Sample text", new Runnable() {
+            @Override
+            public void run() {
+                board.mlog.addMessage("rekt m8");
+            }
+        });
     }
 
     @Override
@@ -54,6 +63,8 @@ public class PlayerBoard extends BasicGameState {
                 g.drawString("Press key C to\nconfirm ships positions", x, board.yPos + 40);
             }
         }
+
+        test.draw(g);
     }
 
     @Override
@@ -91,6 +102,8 @@ public class PlayerBoard extends BasicGameState {
                 game.enterState(0);
             }
         }
+
+        test.handleUpdate(container);
     }
 
     @Override
@@ -102,33 +115,35 @@ public class PlayerBoard extends BasicGameState {
     public void mouseClicked(int button, int x, int y, int clickCount) {
         board.handleMouseClick(button, x, y);
 
-        if(button == 0 && totalShipsPlayed() < HiddenShips.shipProps.length) {
-            Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, HiddenShips.shipProps[activePlacing]);
-            if(board.canBePlaced(ship)) {
-                board.place(ship);
-                for(ShipPoint pos : ship.getPositions()) {
-                    board.setChecked(pos.getX(), pos.getY());
-                }
-
-                shipsPlaced[activePlacing] = true;
-                updateNextShip();
-            }
-        }
-
-        // Remove ship on right click
-        if(!confirmedPositions && button == 1) {
-            if(board.containsShip()) {
-                Ship ship = board.getActive();
-                board.removeShip(ship);
-
-                // Search for a placed ship with the same size of the removed to check as not placed
-                for (int i = 0; i < shipsPlaced.length; i++) {
-                    if(shipsPlaced[i] && HiddenShips.shipProps[i] == ship.getPositions().length) {
-                        shipsPlaced[i] = false;
-                        break;
+        if(board.activeY >= 0 && board.activeY >= 0) {
+            if (button == 0 && totalShipsPlayed() < HiddenShips.shipProps.length) {
+                Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, HiddenShips.shipProps[activePlacing]);
+                if (board.canBePlaced(ship)) {
+                    board.place(ship);
+                    for (ShipPoint pos : ship.getPositions()) {
+                        board.setChecked(pos.getX(), pos.getY());
                     }
+
+                    shipsPlaced[activePlacing] = true;
+                    updateNextShip();
                 }
-                updateNextShip();
+            }
+
+            // Remove ship on right click
+            if (!confirmedPositions && button == 1) {
+                if (board.containsShip()) {
+                    Ship ship = board.getActive();
+                    board.removeShip(ship);
+
+                    // Search for a placed ship with the same size of the removed to check as not placed
+                    for (int i = 0; i < shipsPlaced.length; i++) {
+                        if (shipsPlaced[i] && HiddenShips.shipProps[i] == ship.getPositions().length) {
+                            shipsPlaced[i] = false;
+                            break;
+                        }
+                    }
+                    updateNextShip();
+                }
             }
         }
     }

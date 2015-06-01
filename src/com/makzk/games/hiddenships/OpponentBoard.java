@@ -32,9 +32,6 @@ public class OpponentBoard extends BasicGameState {
     private final int postTurnDelay = 500;
     private int delayAccum = 0;
 
-    public OpponentBoard() {
-    }
-
     @Override
     public void init(GameContainer container, final StateBasedGame game) throws SlickException {
         cols = HiddenShips.boardCols;
