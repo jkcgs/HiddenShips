@@ -4,7 +4,8 @@ import com.makzk.games.hiddenships.Board;
 import com.makzk.games.hiddenships.Ship;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Testing Board methods
