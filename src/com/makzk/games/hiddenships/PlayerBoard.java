@@ -1,7 +1,9 @@
 package com.makzk.games.hiddenships;
 
+import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
+import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
@@ -44,12 +46,20 @@ public class PlayerBoard extends BasicGameState {
 
         if(totalShipsPlayed() < Main.shipProps.length) {
             g.drawString(String.format("Placing ship [%s] size %s", activePlacing+1, Main.shipProps[activePlacing]), x, board.yPos+40);
+        } else {
+            g.drawString("Press key C to\nconfirm ships positions", x, board.yPos+40);
         }
     }
 
     @Override
     public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
-
+        if(Keyboard.isKeyDown(Input.KEY_C)) {
+            if(!confirmedPositions
+                    && totalShipsPlayed() == Main.shipProps.length) {
+                confirmedPositions = true;
+                game.enterState(0);
+            }
+        }
     }
 
     @Override
@@ -103,6 +113,7 @@ public class PlayerBoard extends BasicGameState {
         board.reset();
         placingDirection = true;
         confirmedPositions = false;
+        activePlacing = 0;
 
         shipsPlaced = new boolean[Main.shipProps.length];
         for (int i = 0; i < shipsPlaced.length; i++) {

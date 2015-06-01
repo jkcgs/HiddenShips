@@ -47,7 +47,15 @@ public class Main extends StateBasedGame {
                 enterState(game.getID()); break;
             case 'e':
                 enterState(playerBoard.getID()); break;
+            case 'r':
+                reset(); break;
         }
+    }
+
+    public void reset() {
+        ((HiddenShips) game).reset();
+        ((PlayerBoard) playerBoard).reset();
+        enterState(playerBoard.getID());
     }
 
     public static void main(String[] args) {

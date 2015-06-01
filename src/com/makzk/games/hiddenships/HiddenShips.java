@@ -63,13 +63,6 @@ public class HiddenShips extends BasicGameState {
         board.handleMouseClick(button, x, y);
     }
 
-    public void keyPressed(int key, char c) {
-        // Resets everything if the R key is pressed
-        if(c == 'r') {
-            reset();
-        }
-    }
-
     public void reset() {
         board.reset();
 
