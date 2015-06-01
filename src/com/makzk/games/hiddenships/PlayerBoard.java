@@ -12,8 +12,10 @@ import org.newdawn.slick.state.StateBasedGame;
  */
 public class PlayerBoard extends BasicGameState {
     private Board board;
-    private int shipsPlaced = 0;
+    private boolean[] shipsPlaced = new boolean[Main.shipProps.length];
     private boolean placingDirection = true; // true: horizontal, false: vertical
+    private boolean confirmedPositions = false;
+    private int activePlacing = 0;
 
     @Override
     public int getID() {
@@ -26,7 +28,7 @@ public class PlayerBoard extends BasicGameState {
 
         board.mlog.setMaxLog(15);
         board.mlog.addMessage("Please locate your ships by\nleft-clicking with the mouse.");
-        board.mlog.addMessage("Change direction with\nright click.");
+        board.mlog.addMessage("Change direction pressing\nthe D (key).");
         board.mlog.addMessage("Place the ship [1] size " + Main.shipProps[0]);
         board.setCanCheck(false);
     }
@@ -35,9 +37,11 @@ public class PlayerBoard extends BasicGameState {
     public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
         board.draw(g);
 
-        if(shipsPlaced < Main.shipProps.length) {
-            int x = board.xPos + board.cols * board.blockSize + 20;
-            g.drawString("Placing direction:\n" + (placingDirection ? "horizontal" : "vertical"), x, board.yPos);
+        int x = board.xPos + board.cols * board.blockSize + 20;
+        g.drawString("Placing direction:\n" + (placingDirection ? "horizontal" : "vertical"), x, board.yPos);
+
+        if(totalShipsPlayed() < Main.shipProps.length) {
+            g.drawString(String.format("Placing ship [%s] size %s", activePlacing+1, Main.shipProps[activePlacing]), x, board.yPos+40);
         }
     }
 
@@ -53,34 +57,73 @@ public class PlayerBoard extends BasicGameState {
 
     @Override
     public void mouseClicked(int button, int x, int y, int clickCount) {
-        if(button == 1 && shipsPlaced < Main.shipProps.length) {
-            placingDirection = !placingDirection;
-        }
-
         board.handleMouseClick(button, x, y);
 
-        if(button == 0 && shipsPlaced < Main.shipProps.length) {
-            Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, Main.shipProps[shipsPlaced]);
+        if(button == 0 && totalShipsPlayed() < Main.shipProps.length) {
+            Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, Main.shipProps[activePlacing]);
             if(board.canBePlaced(ship)) {
                 board.place(ship);
                 for(ShipPoint pos : ship.getPositions()) {
                     board.setChecked(pos.getX(), pos.getY());
                 }
 
-                shipsPlaced++;
-                board.mlog.addMessage("Ship [" + shipsPlaced + "] placed");
-                if(shipsPlaced < Main.shipProps.length) {
-                    board.mlog.addMessage(
-                            String.format("Place ship [%s] size %s", shipsPlaced+1, Main.shipProps[shipsPlaced])
-                    );
-                }
+                shipsPlaced[activePlacing] = true;
+                updateNextShip();
             }
+        }
+
+        // Remove ship on right click
+        if(!confirmedPositions && button == 1) {
+            if(board.containsShip()) {
+                Ship ship = board.getActive();
+                board.removeShip(ship);
+
+                // Search for a placed ship with the same size of the removed to check as not placed
+                for (int i = 0; i < shipsPlaced.length; i++) {
+                    if(shipsPlaced[i] && Main.shipProps[i] == ship.getPositions().length) {
+                        shipsPlaced[i] = false;
+                        break;
+                    }
+                }
+                updateNextShip();
+            }
+        }
+    }
+
+    @Override
+    public void keyPressed(int key, char c) {
+        if(c == 'd' && totalShipsPlayed() < Main.shipProps.length) {
+            placingDirection = !placingDirection;
         }
     }
 
     public void reset() {
         board.reset();
-        shipsPlaced = 0;
+        shipsPlaced = new boolean[Main.shipProps.length];
         placingDirection = true;
+        confirmedPositions = false;
+    }
+
+    public int totalShipsPlayed() {
+        int count = 0;
+        for(boolean placed : shipsPlaced) {
+            if(placed) count++;
+        }
+
+        return count;
+    }
+
+    public int nextShipToPlace() {
+        for (int i = 0; i < shipsPlaced.length; i++) {
+            if(!shipsPlaced[i]) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public void updateNextShip() {
+        activePlacing = nextShipToPlace();
     }
 }

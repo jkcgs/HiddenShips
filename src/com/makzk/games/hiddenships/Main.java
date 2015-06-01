@@ -35,7 +35,7 @@ public class Main extends StateBasedGame {
         addState(game);
         addState(playerBoard);
 
-        enterState(game.getID());
+        enterState(playerBoard.getID());
     }
 
     @Override

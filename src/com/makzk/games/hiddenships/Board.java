@@ -131,6 +131,36 @@ public class Board {
     }
 
     /**
+     * Removes an entire ship at a specific location
+     * @param ship The ship to be removed from the board
+     */
+    public void removeShip(Ship ship) {
+        if(ship != null) {
+            for(ShipPoint pos : ship.getPositions()) {
+                setChecked(pos.getX(), pos.getY(), false);
+                board[pos.getX()][pos.getY()] = null;
+            }
+
+            if(ship.isTotallySunken()) {
+                sunken--;
+            }
+
+            found -= ship.totalSunkenParts();
+            ships.remove(ship);
+        }
+    }
+
+
+    /**
+     * Removes an entire ship at a specific location
+     * @param x The X coordinate where the ship is located
+     * @param y The Y coordinate where the ship is located
+     */
+    public void removeShip(int x, int y) {
+        removeShip(getAt(x, y));
+    }
+
+    /**
      * Checks if a ship can be placed on the board
      * @param ship The ship to be placed
      * @return A boolean depending on space availability for the ship
@@ -171,6 +201,14 @@ public class Board {
     }
 
     /**
+     * Checks if the active place on the board is occupied by a ship
+     * @return A boolean depending on the space usage
+     */
+    public boolean containsShip() {
+        return (activeX >= 0 && activeY >= 0) ? containsShip(activeX, activeY) : false;
+    }
+
+    /**
      * Returns the ship at desired coordinate
      * @param x The X position for ship
      * @param y The Y position for ship
@@ -187,6 +225,14 @@ public class Board {
         }
 
         return board[x][y];
+    }
+
+    /**
+     * Returns the ship at the actual active coordinate
+     * @return Returns the ship on the location, or null if it's an empty place
+     */
+    public Ship getActive() {
+        return (activeX >= 0 && activeY >= 0) ? getAt(activeX, activeY) : null;
     }
 
     /**

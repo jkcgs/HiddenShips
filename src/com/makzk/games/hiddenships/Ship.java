@@ -82,6 +82,22 @@ public class Ship {
     }
 
     /**
+     * Counts the amount of parts that has been sunken
+     * @return The number of sunken parts
+     */
+    public int totalSunkenParts() {
+        int count = 0;
+
+        for(ShipPoint pos : positions) {
+            if(pos.isSunken()) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
      * Check if the ship is totally sunken, by checking all ship points.
      * @return A boolean, depending on the ship status.
      */
