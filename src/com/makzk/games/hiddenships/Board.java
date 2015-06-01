@@ -205,7 +205,7 @@ public class Board {
      * @return A boolean depending on the space usage
      */
     public boolean containsShip() {
-        return (activeX >= 0 && activeY >= 0) ? containsShip(activeX, activeY) : false;
+        return (activeX >= 0 && activeY >= 0) && containsShip(activeX, activeY);
     }
 
     /**
@@ -296,9 +296,9 @@ public class Board {
     public void uncheckAll() {
         for (int i = 0; i < cols; i++) {
             for (int j = 0; j < rows; j++) {
-                checked[cols][rows] = false;
-                if(containsShip(cols, rows)) {
-                    getAt(cols, rows).getPosition(cols, rows).setSunken(false);
+                checked[i][j] = false;
+                if(containsShip(i, j)) {
+                    getAt(i, j).getPosition(i, j).setSunken(false);
                 }
             }
         }
@@ -359,20 +359,35 @@ public class Board {
             return;
         }
 
-        if(canCheck && !isChecked(activeX, activeY)) {
-            setChecked(activeX, activeY);
-            if(containsShip(activeX, activeY)) {
+        // Process click over active location
+        if(canCheck) {
+            boolean isChecked = isChecked(activeX, activeY);
+            processCheck(activeX, activeY);
+            boolean wasChecked = isChecked(activeX, activeY);
+
+            // Process click event when a valid click was executed
+            if(clickEvent != null && !isChecked && wasChecked) {
+                clickEvent.run();
+            }
+        }
+    }
+
+    /**
+     * Processes verbosely action over a box
+     * @param x The X coordinate of the box
+     * @param y The Y coordinate of the box
+     */
+    public void processCheck(int x, int y) {
+        if(!isChecked(x, y)) {
+            setChecked(x, y);
+            if(containsShip(x, y)) {
                 found++;
-                mlog.addMessage(String.format("found at %s, %s", activeX+1, activeY+1));
-                if(getAt(activeX, activeY).isTotallySunken()) {
+                mlog.addMessage(String.format("found at %s, %s", x+1, y+1));
+                if(getAt(x, y).isTotallySunken()) {
                     sunken++;
                     mlog.addMessage("ship sunken!");
                 }
             }
-        }
-
-        if(clickEvent != null) {
-            clickEvent.run();
         }
     }
 

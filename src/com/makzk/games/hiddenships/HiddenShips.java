@@ -1,96 +1,79 @@
 package com.makzk.games.hiddenships;
 
-import org.newdawn.slick.Color;
+import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.GameContainer;
-import org.newdawn.slick.Graphics;
 import org.newdawn.slick.SlickException;
-import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
+import org.newdawn.slick.util.Log;
 
 /**
  * Hidden ships (submarines) game simulation
  * Created by makzk on 27-05-15.
  */
-public class HiddenShips extends BasicGameState {
-    // Position where the squares begin
-    private int initialX = 20;
-    private int initialY = 20;
+public class HiddenShips extends StateBasedGame {
+    public static final String version = "v0.1a";
 
-    // Number of cols and rows, and square size
-    private int cols;
-    private int rows;
-    private int size;
+    // Window properties
+    public static final String winTitle = "HiddenShips";
+    public static final int winWidth = 1050;
+    public static final int winHeight = 600;
 
-    // Total amount of ship parts placed
-    private int totalSelected = 0;
+    // Game definitions
+    public static final int boardCols = 15;
+    public static final int boardRows = 11;
+    public static final int boxSize = 50;
+    public static final int[] shipProps = new int[]{2,3,3,4,5};
 
-    // Board
-    private Board board;
+    public OpponentBoard game;
+    public PlayerBoard playerBoard;
 
-    public HiddenShips() {
+    public HiddenShips(String title) {
+        super(title);
+
+        game = new OpponentBoard();
+        playerBoard = new PlayerBoard();
     }
 
     @Override
-    public void init(GameContainer container, StateBasedGame game) throws SlickException {
-        cols = Main.boardCols;
-        rows = Main.boardRows;
-        size = Main.boxSize;
+    public void initStatesList(GameContainer gc) throws SlickException {
+        addState(game);
+        addState(playerBoard);
 
-        board = new Board(cols, rows, size, initialX+5, initialY+5);
-        reset();
+        enterState(playerBoard.getID());
     }
 
     @Override
-    public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
-        // :D
-    }
+    public void keyPressed(int key, char c) {
+        super.keyPressed(key, c);
 
-    @Override
-    public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
-        board.draw(g);
-
-        // Information
-        int xpos = initialX + cols * size + cols + 10;
-        g.setColor(Color.white);
-        g.drawString(String.format("Active: (%s, %s)", board.activeX+1, board.activeY+1), xpos, 30);
-        g.drawString(String.format("Found: %s/%s", board.found, totalSelected), xpos, 50);
-        g.drawString(String.format("Sunken: %s/%s", board.sunken, Main.shipProps.length), xpos, 70);
-        g.drawString("Legend\nDark grey: not checked\nLight grey: nothing\nRed: sunken ship part", xpos, 110);
-    }
-
-    public void mouseMoved(int oldx, int oldy, int mouseX, int mouseY) {
-        board.handleMouseMove(mouseX, mouseY);
-    }
-
-    public void mousePressed(int button, int x, int y) {
-        board.handleMouseClick(button, x, y);
+        switch (c) {
+            case 'q':
+                enterState(game.getID()); break;
+            case 'e':
+                enterState(playerBoard.getID()); break;
+            case 'r':
+                reset(); break;
+        }
     }
 
     public void reset() {
-        board.reset();
+        game.reset();
+        playerBoard.reset();
+        enterState(playerBoard.getID());
+    }
 
-        // Set special blocks
-        int c = 0;
-        while(c < Main.shipProps.length) {
-            int size = Main.shipProps[c];
-            boolean direction = Math.random() >= .5; // true: horizontal, false: vertical
-
-            // Initial positions for ship
-            int ix = (int)(Math.random() * (direction ? cols - size : cols)); // initial x
-            int iy = (int)(Math.random() * (direction ? rows : rows - size)); // initial y
-
-            Ship ship = Ship.createShip(ix, iy, direction, size);
-            if(board.canBePlaced(ship)) {
-                board.place(ship);
-                c++;
-            }
+    public static void main(String[] args) {
+        try {
+            AppGameContainer appgc;
+            appgc = new AppGameContainer(new HiddenShips(winTitle + " " + version));
+            appgc.setDisplayMode(winWidth, winHeight, false);
+            appgc.setShowFPS(false);
+            appgc.setVerbose(false);
+            appgc.start();
+        } catch (SlickException e) {
+            Log.error(null, e);
         }
-
-        totalSelected = board.totalParts();
     }
 
-    @Override
-    public int getID() {
-        return 0;
-    }
+
 }

@@ -65,10 +65,8 @@ public class MessageLog {
         }
 
         if(messages.size() > maxLog) {
-            int diff = maxLog - messages.size();
-            for (int i = 0; i < diff; i++) {
-                messages.remove(0);
-            }
+            int diff = messages.size() - maxLog;
+            messages.subList(0, diff).clear();
         }
     }
 

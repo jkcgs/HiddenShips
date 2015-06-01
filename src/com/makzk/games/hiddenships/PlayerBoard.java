@@ -14,10 +14,14 @@ import org.newdawn.slick.state.StateBasedGame;
  */
 public class PlayerBoard extends BasicGameState {
     private Board board;
-    private boolean[] shipsPlaced = new boolean[Main.shipProps.length];
+    private boolean[] shipsPlaced = new boolean[HiddenShips.shipProps.length];
     private boolean placingDirection = true; // true: horizontal, false: vertical
     private boolean confirmedPositions = false;
     private int activePlacing = 0;
+    private boolean opponentTurn = false;
+    private boolean opponentTurnProcessed = false;
+    private final int turnPostDelay = 3000;
+    private int delayAccum = 0;
 
     @Override
     public int getID() {
@@ -26,14 +30,14 @@ public class PlayerBoard extends BasicGameState {
 
     @Override
     public void init(GameContainer container, StateBasedGame game) throws SlickException {
-        board = new Board(Main.boardCols, Main.boardRows, Main.boxSize, 25, 25);
+        board = new Board(HiddenShips.boardCols, HiddenShips.boardRows, HiddenShips.boxSize, 25, 25);
         reset();
 
         board.mlog.setMaxLog(15);
         board.mlog.addMessage("Please locate your ships by\nleft-clicking with the mouse.");
         board.mlog.addMessage("Change direction pressing\nthe D (key).");
         board.mlog.addMessage("Remove a placed ship by\nright-clicking on it.");
-        board.mlog.addMessage("Place the ship [1] size " + Main.shipProps[0]);
+        board.mlog.addMessage("Place the ship [1] size " + HiddenShips.shipProps[0]);
         board.setCanCheck(false);
     }
 
@@ -41,13 +45,14 @@ public class PlayerBoard extends BasicGameState {
     public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
         board.draw(g);
 
-        int x = board.xPos + board.cols * board.blockSize + 20;
-        g.drawString("Placing direction:\n" + (placingDirection ? "horizontal" : "vertical"), x, board.yPos);
-
-        if(totalShipsPlayed() < Main.shipProps.length) {
-            g.drawString(String.format("Placing ship [%s] size %s", activePlacing+1, Main.shipProps[activePlacing]), x, board.yPos+40);
-        } else {
-            g.drawString("Press key C to\nconfirm ships positions", x, board.yPos+40);
+        if(!confirmedPositions) {
+            int x = board.xPos + board.cols * board.blockSize + 20;
+            g.drawString("Placing direction:\n" + (placingDirection ? "horizontal" : "vertical"), x, board.yPos);
+            if (totalShipsPlayed() < HiddenShips.shipProps.length) {
+                g.drawString(String.format("Placing ship [%s] size %s", activePlacing + 1, HiddenShips.shipProps[activePlacing]), x, board.yPos + 40);
+            } else {
+                g.drawString("Press key C to\nconfirm ships positions", x, board.yPos + 40);
+            }
         }
     }
 
@@ -55,8 +60,34 @@ public class PlayerBoard extends BasicGameState {
     public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
         if(Keyboard.isKeyDown(Input.KEY_C)) {
             if(!confirmedPositions
-                    && totalShipsPlayed() == Main.shipProps.length) {
+                    && totalShipsPlayed() == HiddenShips.shipProps.length) {
                 confirmedPositions = true;
+
+                // clear board
+                board.mlog.clear();
+                board.uncheckAll();
+
+                // go back!
+                game.enterState(0);
+            }
+        }
+
+        // Do opponent turn
+        if(opponentTurn) {
+            if(!opponentTurnProcessed) {
+                doOpponentTurn();
+                opponentTurnProcessed = true;
+            }
+
+            delayAccum += delta;
+            if(delayAccum >= turnPostDelay) {
+                delayAccum = 0;
+
+                // Reset opp turn processed
+                opponentTurn = false;
+                opponentTurnProcessed = false;
+
+                // go back!
                 game.enterState(0);
             }
         }
@@ -71,8 +102,8 @@ public class PlayerBoard extends BasicGameState {
     public void mouseClicked(int button, int x, int y, int clickCount) {
         board.handleMouseClick(button, x, y);
 
-        if(button == 0 && totalShipsPlayed() < Main.shipProps.length) {
-            Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, Main.shipProps[activePlacing]);
+        if(button == 0 && totalShipsPlayed() < HiddenShips.shipProps.length) {
+            Ship ship = Ship.createShip(board.activeX, board.activeY, placingDirection, HiddenShips.shipProps[activePlacing]);
             if(board.canBePlaced(ship)) {
                 board.place(ship);
                 for(ShipPoint pos : ship.getPositions()) {
@@ -92,7 +123,7 @@ public class PlayerBoard extends BasicGameState {
 
                 // Search for a placed ship with the same size of the removed to check as not placed
                 for (int i = 0; i < shipsPlaced.length; i++) {
-                    if(shipsPlaced[i] && Main.shipProps[i] == ship.getPositions().length) {
+                    if(shipsPlaced[i] && HiddenShips.shipProps[i] == ship.getPositions().length) {
                         shipsPlaced[i] = false;
                         break;
                     }
@@ -104,7 +135,7 @@ public class PlayerBoard extends BasicGameState {
 
     @Override
     public void keyPressed(int key, char c) {
-        if(c == 'd' && totalShipsPlayed() < Main.shipProps.length) {
+        if(c == 'd' && totalShipsPlayed() < HiddenShips.shipProps.length) {
             placingDirection = !placingDirection;
         }
     }
@@ -115,7 +146,7 @@ public class PlayerBoard extends BasicGameState {
         confirmedPositions = false;
         activePlacing = 0;
 
-        shipsPlaced = new boolean[Main.shipProps.length];
+        shipsPlaced = new boolean[HiddenShips.shipProps.length];
         for (int i = 0; i < shipsPlaced.length; i++) {
             shipsPlaced[i] = false;
         }
@@ -142,5 +173,31 @@ public class PlayerBoard extends BasicGameState {
 
     public void updateNextShip() {
         activePlacing = nextShipToPlace();
+    }
+
+    public void setOpponentTurn(boolean opponentTurn) {
+        this.opponentTurn = opponentTurn;
+    }
+
+    public void doOpponentTurn() {
+        // Can't play if it's ready!
+        if(board.found == board.totalParts()) {
+            board.mlog.addMessage("[Opp] I'm ready, not playing!");
+            return;
+        }
+
+        // Scary!
+        while(true) {
+            int x = (int)(Math.random() * board.cols);
+            int y = (int)(Math.random() * board.rows);
+
+            if(!board.isChecked(x, y)) {
+                board.setChecked(x, y);
+                board.mlog.addMessage(String.format("Playing (%s, %s)", x, y));
+                board.processCheck(x, y);
+
+                break; // please reach here
+            }
+        }
     }
 }
