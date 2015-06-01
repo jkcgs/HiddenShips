@@ -27,16 +27,16 @@ public class OpponentBoard extends BasicGameState {
     // Board
     private Board board;
 
-    // Post turn timers
-    private boolean changeTurn = false;
-    private final int postTurnDelay = 500;
-    private int delayAccum = 0;
+    // Ready button
+    private Button btnReady;
 
     @Override
     public void init(GameContainer container, final StateBasedGame game) throws SlickException {
         cols = HiddenShips.boardCols;
         rows = HiddenShips.boardRows;
         size = HiddenShips.boxSize;
+
+        btnReady = new Button(800, 200, "Ready");
 
         board = new Board(cols, rows, size, initialX+5, initialY+5);
         board.mlog.setMaxLog(15);
@@ -45,25 +45,30 @@ public class OpponentBoard extends BasicGameState {
         board.setClickEvent(new Runnable() {
             @Override
             public void run() {
-                changeTurn = true;
+                btnReady.setDisabled(false);
+                board.setCanCheck(false);
             }
         });
-    }
-
-    @Override
-    public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
-        // Delay to
-        if(changeTurn) {
-            delayAccum += delta;
-            if(delayAccum >= postTurnDelay) {
-                delayAccum = 0;
-                changeTurn = false;
+        btnReady.setAction(new Runnable() {
+            @Override
+            public void run() {
+                btnReady.setDisabled(true);
 
                 // Flip boards
                 ((HiddenShips) game).playerBoard.setOpponentTurn(true);
                 game.enterState(((HiddenShips) game).playerBoard.getID());
             }
-        }
+        });
+    }
+
+    @Override
+    public void enter(GameContainer container, StateBasedGame game) throws SlickException {
+        board.setCanCheck(true);
+    }
+
+    @Override
+    public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
+        btnReady.handleUpdate(container);
     }
 
     @Override
@@ -73,10 +78,12 @@ public class OpponentBoard extends BasicGameState {
         // Information
         int xpos = initialX + cols * size + cols + 10;
         g.setColor(Color.white);
-        g.drawString(String.format("Active: (%s, %s)", board.activeX+1, board.activeY+1), xpos, 30);
+        g.drawString(String.format("Active: (%s, %s)", board.activeX + 1, board.activeY + 1), xpos, 30);
         g.drawString(String.format("Found: %s/%s", board.found, totalSelected), xpos, 50);
         g.drawString(String.format("Sunken: %s/%s", board.sunken, HiddenShips.shipProps.length), xpos, 70);
         g.drawString("Legend\nDark grey: not checked\nLight grey: nothing\nRed: sunken ship part", xpos, 110);
+
+        btnReady.draw(g);
     }
 
     public void mouseMoved(int oldx, int oldy, int mouseX, int mouseY) {
@@ -89,6 +96,7 @@ public class OpponentBoard extends BasicGameState {
 
     public void reset() {
         board.reset();
+        btnReady.setDisabled(true);
 
         // Set special blocks
         int c = 0;

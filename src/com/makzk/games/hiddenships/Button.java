@@ -70,6 +70,10 @@ public class Button {
         this.text = text;
     }
 
+    public void setAction(Runnable action) {
+        this.action = action;
+    }
+
     public void draw(Graphics g) {
         if(!shown) {
             return;
